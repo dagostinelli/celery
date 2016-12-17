@@ -590,6 +590,25 @@ class Task(object):
         )
     subtask_from_request = signature_from_request  # XXX compat
 
+    def ack(self):
+        """Manually acknowledge this task.
+
+        Arguments:
+            None
+
+        Returns:
+            None
+        """
+        # trace imports Task, so need to import inline.
+        from celery.app.trace import build_tracer
+
+        app = self._get_app()
+
+        # Make sure we get the task instance, not class.
+        task = app._tasks[self.name]
+
+        task.acknowledge()
+	
     def retry(self, args=None, kwargs=None, exc=None, throw=True,
               eta=None, countdown=None, max_retries=None, **options):
         """Retry the task.
