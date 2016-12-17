@@ -202,6 +202,7 @@ NAMESPACES = Namespace(
     ),
     task=Namespace(
         __old__=OLD_NS,
+        auto_ack=Option(True, type='bool'),
         acks_late=Option(False, type='bool'),
         always_eager=Option(False, type='bool'),
         annotations=Option(type='any'),
