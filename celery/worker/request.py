@@ -213,7 +213,7 @@ class Request(object):
             return
 
         # acknowledge task as being processed.
-        if not self.task.acks_late:
+        if not self.task.acks_late and self.task.automatic_ack:
             self.acknowledge()
 
         request = self.request_dict
@@ -261,7 +261,8 @@ class Request(object):
         self.task.backend.mark_as_revoked(
             self.id, reason, request=self, store_result=self.store_errors,
         )
-        self.acknowledge()
+        if self.task.automatic_ack:
+            self.acknowledge()
         self._already_revoked = True
         send_revoked(self.task, request=self,
                      terminated=terminated, signum=signum, expired=expired)
@@ -290,7 +291,7 @@ class Request(object):
         self.worker_pid = pid
         self.time_start = time_accepted
         task_accepted(self)
-        if not self.task.acks_late:
+        if not self.task.acks_late and self.task.automatic_ack:
             self.acknowledge()
         self.send_event('task-started')
         if _does_debug:
@@ -333,7 +334,7 @@ class Request(object):
 
     def on_retry(self, exc_info):
         """Handler called if the task should be retried."""
-        if self.task.acks_late:
+        if self.task.acks_late and self.task.automatic_ack:
             self.acknowledge()
 
         self.send_event('task-retried',
@@ -366,7 +367,7 @@ class Request(object):
                 self.id, exc, request=self, store_result=self.store_errors,
             )
         # (acks_late) acknowledge after result stored.
-        if self.task.acks_late:
+        if self.task.acks_late and self.task.automatic_ack:
             requeue = not self.delivery_info.get('redelivered')
             reject = (
                 self.task.reject_on_worker_lost and
@@ -544,7 +545,7 @@ def create_request_cls(base, task, pool, hostname, eventer,
                 return self.on_failure(retval, return_ok=True)
             task_ready(self)
 
-            if acks_late:
+            if acks_late and automatic_ack:
                 self.acknowledge()
 
             if events:
