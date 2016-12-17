@@ -330,7 +330,7 @@ class Request(object):
             return self.on_failure(retval, return_ok=True)
         task_ready(self)
 
-        if self.task.acks_late and self.task.auto_ack
+        if self.task.acks_late and self.task.auto_ack:
             self.acknowledge()
 
         self.send_event('task-succeeded', result=retval, runtime=runtime)
